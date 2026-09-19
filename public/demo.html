@@ -254,11 +254,11 @@ npm install mosya-pop-message</code></pre>
     </footer>
   </div>
 
-  <!-- Load the library -->
-  <script src="../dist/index.umd.js"></script>
+  <!-- Load the library from CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/mosya-pop-message@1.0.0/dist/index.umd.js"></script>
   
   <script>
-    // Initialize library if loaded globally
+    // Initialize library from global scope
     const { alert, confirm, prompt, toast, progress } = window.MosyaPopMessage || {};
 
     function showAlert(title, message, icon, typeClass) {
