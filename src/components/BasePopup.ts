@@ -1,7 +1,6 @@
 // Base Popup Component
 import { createElement, generateId, escapeHtml } from '../utils';
 import type { MosyaAlertOptions } from '../types';
-import styles from '../styles.css?inline';
 
 export class BasePopup {
   protected element: HTMLElement;
@@ -13,13 +12,6 @@ export class BasePopup {
   constructor(options: MosyaAlertOptions = {}) {
     this.id = generateId();
     this.element = this.createPopupElement(options);
-    
-    // Add styles
-    const styleElement = document.createElement('style');
-    styleElement.textContent = styles;
-    if (!document.head.contains(styleElement)) {
-      document.head.appendChild(styleElement);
-    }
   }
 
   private createBackdrop(showCloseOnBackdrop: boolean): HTMLElement {
@@ -27,7 +19,7 @@ export class BasePopup {
       class: 'mosya-backdrop'
     });
 
-    this.backdropClickHandler = showCloseOnBackdrop ? (e: MouseEvent) => {
+    this.backdropClickHandler = showCloseOnBackdrop ? (e: Event) => {
       if (e.target === backdrop && !this.isClosed()) {
         this.close();
       }

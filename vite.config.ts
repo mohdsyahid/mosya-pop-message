@@ -15,17 +15,16 @@ export default defineConfig({
       }
     },
     sourcemap: true,
-    minify: 'terser',
-    terserOptions: {
-      compress: {
-        drop_console: false,
-        drop_debugger: true
-      }
-    }
+    minify: 'terser'
   },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, 'src')
+    }
+  },
+  css: {
+    modules: {
+      localsConvention: 'camelCaseOnly'
     }
   }
 });
