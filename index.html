@@ -444,127 +444,142 @@ setTimeout(() => {
   <script>
     console.log('%c Mosya Pop Message v1.0.0 Loaded! ', 'background: linear-gradient(135deg, #3b82f6, #22c55e); color: white; padding: 10px 20px; border-radius: 5px; font-size: 16px; font-weight: bold;');
     
+    // Check if library loaded
+    if (!window.MosyaPopMessage) {
+      console.error('Mosya Pop Message library failed to load!');
+    }
+    
     // Helper function to show alerts
     function showAlert(type) {
       const configs = {
         'info': {
           title: 'Information',
           text: 'Ini adalah notifikasi maklumat yang cantik!',
-          icon: 'info' as const
+          icon: 'info'
         },
         'success': {
           title: 'Berjaya!',
           text: 'Tahniah! Operasi berjaya dibuat tanpa masalah.',
-          icon: 'success' as const
+          icon: 'success'
         },
         'warning': {
           title: 'Amaran',
           text: 'Sila berhati-hati dan semak maklumat anda.',
-          icon: 'warning' as const
+          icon: 'warning'
         },
         'error': {
           title: 'Ralat',
           text: 'Maaf, terdapat masalah dengan sistem kami.',
-          icon: 'error' as const
+          icon: 'error'
         }
       };
       
-      const config = configs[type as keyof typeof configs];
-      if (config) {
+      const config = configs[type];
+      if (config && MosyaPopMessage.alert) {
         MosyaPopMessage.alert(config).then(() => {
-          console.log(`${type} alert dismissed`);
+          console.log(type + ' alert dismissed');
         });
+      } else {
+        console.error('Library not loaded or alert method missing');
       }
     }
     
     // Handle delete confirmation
     function handleDelete() {
+      if (!MosyaPopMessage.confirm) {
+        alert('Library not loaded yet. Please refresh page.');
+        return;
+      }
+      
       MosyaPopMessage.confirm({
         title: 'Adakah anda pasti mahu delete?',
         text: 'Item ini akan dipadam secara kekal! Tindakan ini tidak dapat diubah semula.',
         confirmButtonText: 'Yes, Delete',
         cancelButtonText: 'Cancel',
         denyButtonText: 'Nope',
-        icon: 'question' as const
+        icon: 'question'
       })
       .then((confirmed) => {
         if (confirmed === true) {
-          MosyaPopMessage.toast.success({
-            message: '✓ Item berjaya dihapuskan!',
-            type: 'success' as const,
-            duration: 3000
-          });
+          MosyaPopMessage.toast.success('✓ Item berjaya dihapuskan!', { duration: 3000 });
         } else {
-          MosyaPopMessage.toast.info({
-            message: '✗ Tindakan dibatalkan.',
-            type: 'info' as const,
-            duration: 2500
-          });
+          MosyaPopMessage.toast.info('✗ Tindakan dibatalkan.', { duration: 2500 });
         }
+      })
+      .catch(function(err) {
+        console.error('Confirm error:', err);
+        alert('Error showing dialog. Please try again.');
       });
     }
     
     // Show loading indicator
     function showProgress() {
+      if (!MosyaPopMessage.progress) {
+        alert('Library not loaded yet.');
+        return;
+      }
+      
       const loadingId = MosyaPopMessage.progress({
         title: 'Memproses...',
         text: 'Silakan tunggu sebentar.'
       });
       
-      setTimeout(() => {
-        MosyaPopMessage.updateProgress(loadingId, {
-          title: 'Menyimpan data...',
-          text: 'Hampir selesai!'
-        });
+      setTimeout(function() {
+        if (typeof MosyaPopMessage.updateProgress === 'function') {
+          MosyaPopMessage.updateProgress(loadingId, {
+            title: 'Menyimpan data...',
+            text: 'Hampir selesai!'
+          });
+        }
       }, 1000);
       
-      setTimeout(() => {
-        MosyaPopMessage.hideProgress(loadingId);
-        MosyaPopMessage.toast.success({
-          message: '✅ Semua data disimpan berjaya!',
-          type: 'success' as const,
-          duration: 3000
-        });
+      setTimeout(function() {
+        if (typeof MosyaPopMessage.hideProgress === 'function') {
+          MosyaPopMessage.hideProgress(loadingId);
+        }
+        MosyaPopMessage.toast.success('✅ Semua data disimpan berjaya!', { duration: 3000 });
       }, 3000);
     }
     
     // Handle prompt input
     function handlePrompt() {
+      if (!MosyaPopMessage.prompt) {
+        alert('Library not loaded yet.');
+        return;
+      }
+      
       MosyaPopMessage.prompt({
         title: 'Masukkan Nama Anda',
         text: 'Sila masukkan nama lengkap anda',
         inputPlaceholder: 'Contoh: Mohd Syahid',
         allowOutsideClick: false
       })
-      .then((value) => {
+      .then(function(value) {
         if (value && value.trim()) {
-          MosyaPopMessage.toast.success({
-            message: `Terima kasih, ${value}!`,
-            type: 'success' as const,
-            duration: 3000
-          });
+          MosyaPopMessage.toast.success('Terima kasih, ' + value + '!', { duration: 3000 });
         } else {
-          MosyaPopMessage.toast.info({
-            message: 'Anda menekan Cancel.',
-            type: 'info' as const,
-            duration: 2500
-          });
+          MosyaPopMessage.toast.info('Anda menekan Cancel.', { duration: 2500 });
         }
+      })
+      .catch(function(err) {
+        console.error('Prompt error:', err);
       });
     }
     
-    // Show toast with proper typing
-    function showToast(type: string, message: string, options?: any) {
-      const toastMethods: Record<string, Function> = {
+    // Show toast with proper handling
+    function showToast(type, message, options) {
+      var toastMethods = {
         'info': MosyaPopMessage.toast.info,
         'success': MosyaPopMessage.toast.success,
         'warning': MosyaPopMessage.toast.warning,
         'error': MosyaPopMessage.toast.error
       };
       
-      const method = toastMethods[type as keyof typeof toastMethods];
+      var method = toastMethods[type];
       if (method) {
         method(message, options);
+      } else {
+        console.error('Unknown toast type:', type);
       }
     }
   </script>
