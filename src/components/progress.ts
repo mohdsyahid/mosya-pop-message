@@ -1,34 +1,22 @@
 // Progress/Loading Indicator Component
 import { generateId } from '../utils';
 import type { MosyaProgressOptions } from '../types';
-import styles from '../styles.css?inline';
 
 class ProgressManager {
   private instances: Map<string, HTMLElement> = new Map();
 
   public show(options: MosyaProgressOptions = {}): string {
     const id = generateId();
-    const popup = this.createProgressPopup(id, options);
-    
-    document.body.appendChild(popup);
-    this.instances.set(id, popup);
-
-    return id;
-  }
-
-  private createProgressPopup(id: string, options: MosyaProgressOptions): HTMLElement {
     const container = document.createElement('div');
-    container.className = 'mosya-container mosya-progress-container';
+    container.className = 'mosya-container';
     container.id = `mosya-progress-${id}`;
 
     // Backdrop
-    const backdrop = document.createElement('div');
-    backdrop.className = 'mosya-backdrop';
-    if (!options.backdrop) {
-      backdrop.style.display = 'none';
+    if (options.backdrop !== false) {
+      const backdrop = document.createElement('div');
+      backdrop.className = 'mosya-backdrop';
+      container.appendChild(backdrop);
     }
-    backdrop.style.opacity = '0.5';
-    backdrop.style.background = 'rgba(0, 0, 0, 0.5)';
 
     // Popup
     const popup = document.createElement('div');
@@ -40,17 +28,14 @@ class ProgressManager {
       closeButton.className = 'mosya-close-button';
       closeButton.innerHTML = '&times;';
       closeButton.title = options.closeButtonTitle || 'Close';
-      
-      closeButton.addEventListener('click', () => {
-        this.hide(id);
-      });
-
+      closeButton.addEventListener('click', () => this.hide(id));
       popup.appendChild(closeButton);
     }
 
     // Spinner
     const spinner = document.createElement('div');
     spinner.className = 'mosya-progress-spinner';
+    popup.appendChild(spinner);
 
     // Title
     if (options.title) {
@@ -61,38 +46,52 @@ class ProgressManager {
     }
 
     // Text
-    if (options.text) {
-      const text = document.createElement('p');
-      text.className = 'mosya-progress-text';
-      text.textContent = options.text;
-      popup.appendChild(text);
-    } else if (!options.title) {
-      // Default text if neither title nor text provided
-      const text = document.createElement('p');
-      text.className = 'mosya-progress-text';
-      text.textContent = 'Loading...';
-      popup.appendChild(text);
+    const text = document.createElement('p');
+    text.className = 'mosya-progress-text';
+    text.textContent = options.text || (options.title ? '' : 'Loading...');
+    if (text.textContent) popup.appendChild(text);
+
+    container.appendChild(popup);
+    document.body.appendChild(container);
+
+    // Escape key closes
+    if (options.allowEscapeKey !== false) {
+      const esc = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') {
+          this.hide(id);
+          document.removeEventListener('keydown', esc);
+        }
+      };
+      document.addEventListener('keydown', esc);
     }
 
-    popup.appendChild(spinner);
-    container.appendChild(backdrop);
-    container.appendChild(popup);
-
-    return container;
+    this.instances.set(id, container);
+    return id;
   }
 
   public update(id: string, options?: Partial<MosyaProgressOptions>): void {
     const instance = this.instances.get(id);
-    if (instance && options) {
-      const titleElement = instance.querySelector('.mosya-progress-title');
-      const textElement = instance.querySelector('.mosya-progress-text');
+    if (!instance || !options) return;
 
-      if (options.title && titleElement) {
-        titleElement.textContent = options.title;
+    if (options.title !== undefined) {
+      let titleElement = instance.querySelector('.mosya-progress-title') as HTMLElement | null;
+      if (!titleElement) {
+        titleElement = document.createElement('h3');
+        titleElement.className = 'mosya-progress-title';
+        const spinner = instance.querySelector('.mosya-progress-spinner');
+        spinner?.after(titleElement);
       }
-      if (options.text && textElement) {
-        textElement.textContent = options.text;
+      titleElement.textContent = options.title;
+    }
+
+    if (options.text !== undefined) {
+      let textElement = instance.querySelector('.mosya-progress-text') as HTMLElement | null;
+      if (!textElement) {
+        textElement = document.createElement('p');
+        textElement.className = 'mosya-progress-text';
+        instance.querySelector('.mosya-progress-popup')?.appendChild(textElement);
       }
+      textElement.textContent = options.text;
     }
   }
 
@@ -105,63 +104,33 @@ class ProgressManager {
   }
 
   public hideAll(): void {
-    this.instances.forEach((_, id) => {
-      this.hide(id);
-    });
+    Array.from(this.instances.keys()).forEach((id) => this.hide(id));
   }
 }
 
 const progressManager = new ProgressManager();
 
 /**
- * Show a loading/progress indicator
+ * Show a loading/progress indicator. Accepts a string or an options object.
  */
-export function progress(options: Omit<MosyaProgressOptions, 'backdrop' | 'closeButtonTitle'> & 
-  { 
-    title?: string;
-    text?: string;
-    backdrop?: boolean;
-    allowOutsideClick?: boolean;
-    allowEscapeKey?: boolean;
-    showCloseButton?: boolean;
-    closeButtonTitle?: string;
-  }
-): string {
-  let opts: MosyaProgressOptions;
-  
-  if (typeof options === 'string') {
-    opts = { text: options };
-  } else {
-    opts = { ...options };
-  }
-
-  // Default backdrop to true
-  if (opts.backdrop === undefined) {
-    opts.backdrop = true;
-  }
-
+function progress(options: string | MosyaProgressOptions = {}): string {
+  const opts: MosyaProgressOptions =
+    typeof options === 'string' ? { text: options } : { ...options };
+  if (opts.backdrop === undefined) opts.backdrop = true;
   return progressManager.show(opts);
 }
 
-/**
- * Update an active progress indicator
- */
-export function updateProgress(id: string, updates: Partial<MosyaProgressOptions>): void {
+function updateProgress(id: string, updates: Partial<MosyaProgressOptions>): void {
   progressManager.update(id, updates);
 }
 
-/**
- * Hide a specific progress indicator
- */
-export function hideProgress(id: string): void {
+function hideProgress(id: string): void {
   progressManager.hide(id);
 }
 
-/**
- * Hide all progress indicators
- */
-export function hideAllProgress(): void {
+function hideAllProgress(): void {
   progressManager.hideAll();
 }
 
+export { progress, updateProgress, hideProgress, hideAllProgress };
 export default progress;

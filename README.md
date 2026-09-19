@@ -32,17 +32,21 @@ Test library ni langsung di sini:
 ```html
 <!-- ESM Module -->
 <script type="module">
-  import { alert, toast } from 'https://cdn.jsdelivr.net/npm/mosya-pop-message@1.0.0/dist/index.esm.js';
+  import { alert, toast } from 'https://cdn.jsdelivr.net/gh/mohdsyahid/mosya-pop-message@main/dist/index.es.js';
   
   alert('Hello from Mosya!').then(() => console.log('Dismissed'));
 </script>
 
 <!-- Global Variable -->
-<script src="https://cdn.jsdelivr.net/npm/mosya-pop-message@1.0.0/dist/index.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/mohdsyahid/mosya-pop-message@main/dist/index.umd.js"></script>
 <script>
   MosyaPopMessage.alert('Hello!');
 </script>
 ```
+
+> 💡 **Alternatif CDN:** boleh juga guna GitHub Pages terus —
+> `https://mohdsyahid.github.io/mosya-pop-message/dist/index.umd.js`
+> (dan `dist/index.es.js` untuk ESM).
 
 ### Using npm
 
@@ -326,7 +330,7 @@ Complete working example using ES Modules:
   <button onclick="showAlert()">Show Alert</button>
   
   <script type="module">
-    import { alert, toast, confirm } from 'https://cdn.jsdelivr.net/npm/mosya-pop-message@1.0.0/dist/index.esm.js';
+    import { alert, toast, confirm } from 'https://cdn.jsdelivr.net/gh/mohdsyahid/mosya-pop-message@main/dist/index.es.js';
     
     async function showAlert() {
       await alert({

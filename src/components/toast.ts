@@ -1,201 +1,126 @@
 // Toast Notification Component
 import { generateId, getIconSVG } from '../utils';
 import type { MosyaToastOptions, PositionType, ToastType } from '../types';
-import styles from '../styles.css?inline';
 
-interface ToastInstance {
-  element: HTMLElement;
-  hide(): void;
-}
-
-/**
- * Create a toast notification manager
- */
 class ToastManager {
-  private toasts: Map<string, ToastInstance> = new Map();
-  private container: HTMLElement | null = null;
-
-  constructor() {
-    this.ensureContainer();
-  }
-
-  private ensureContainer(): void {
-    if (!this.container) {
-      this.container = document.createElement('div');
-      this.container.id = 'mosya-toast-container';
-      this.container.style.position = 'fixed';
-      this.container.style.top = '0';
-      this.container.style.left = '0';
-      this.container.style.right = '0';
-      this.container.style.bottom = '0';
-      this.container.style.zIndex = '99999';
-      this.container.style.pointerEvents = 'none';
-      document.body.appendChild(this.container);
-    }
-  }
+  private active: Map<string, { element: HTMLElement; timer?: ReturnType<typeof setTimeout> }> = new Map();
 
   public show(options: MosyaToastOptions): string {
     const id = generateId();
-    const toastElement = this.createToast(id, options);
-    
-    this.container?.appendChild(toastElement);
-    
-    // Trigger animation
-    requestAnimationFrame(() => {
-      toastElement.classList.add('show');
-    });
-
-    // Auto-hide after duration
-    const duration = options.duration || 3000;
-    if (duration > 0) {
-      setTimeout(() => {
-        this.hide(id);
-      }, duration);
-    }
-
-    return id;
-  }
-
-  private createToast(id: string, options: MosyaToastOptions): HTMLElement {
     const toast = document.createElement('div');
-    toast.className = `mosya-toast ${options.type || 'info'} toast`;
+    toast.className = `mosya-toast ${options.type || 'info'}`;
     toast.dataset.toastId = id;
 
-    // Position class
-    const positionClass = `mosya-toast-position-${(options.position as string) || 'top-end'}`;
-    toast.classList.add(positionClass);
+    // Position
+    const position: PositionType = options.position || 'top-end';
+    toast.classList.add(`mosya-toast-position-${position}`);
 
     // Icon
     const iconWrapper = document.createElement('div');
     iconWrapper.className = 'mosya-toast-icon';
-    
-    if (options.icon && options.icon !== 'none') {
-      const iconSvg = getIconSVG(options.icon || '');
+
+    const iconType = options.icon && options.icon !== 'none' ? options.icon : (options.type || 'info');
+    const svg = getIconSVG(iconType);
+    if (svg) {
       const img = document.createElement('img');
-      img.src = `data:image/svg+xml,${encodeURIComponent(iconSvg)}`;
+      img.src = `data:image/svg+xml,${encodeURIComponent(svg)}`;
       img.alt = '';
       iconWrapper.appendChild(img);
-    } else {
-      // Show type as letter if no icon
-      const firstLetter = (options.type || 'info').charAt(0).toUpperCase();
-      iconWrapper.textContent = firstLetter;
-      iconWrapper.style.width = '24px';
-      iconWrapper.style.height = '24px';
-      iconWrapper.style.display = 'flex';
-      iconWrapper.style.alignItems = 'center';
-      iconWrapper.style.justifyContent = 'center';
-      iconWrapper.style.fontWeight = 'bold';
-      iconWrapper.style.color = '#fff';
-      
-      switch (options.type) {
-        case 'success':
-          iconWrapper.style.backgroundColor = '#22c55e';
-          break;
-        case 'warning':
-          iconWrapper.style.backgroundColor = '#f59e0b';
-          break;
-        case 'error':
-          iconWrapper.style.backgroundColor = '#ef4444';
-          break;
-        default:
-          iconWrapper.style.backgroundColor = '#3b82f6';
-      }
     }
 
     // Content
     const content = document.createElement('div');
     content.className = 'mosya-toast-content';
-    content.innerHTML = options.message;
+    content.textContent = options.message;
 
-    // Append elements
     toast.appendChild(iconWrapper);
     toast.appendChild(content);
 
     // Duration bar
-    const durationBar = document.createElement('div');
-    durationBar.className = 'mosya-toast-duration';
-    durationBar.style.width = '100%';
-    
-    if (options.duration && options.duration > 0) {
-      durationBar.style.transition = `width ${options.duration}ms linear`;
-      setTimeout(() => {
-        durationBar.style.width = '0%';
-      }, 100);
+    const duration = options.duration ?? 3000;
+    if (duration > 0) {
+      const bar = document.createElement('div');
+      bar.className = 'mosya-toast-duration';
+      bar.style.width = '100%';
+      bar.style.transition = `width ${duration}ms linear`;
+      toast.appendChild(bar);
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          bar.style.width = '0%';
+        });
+      });
     }
-    
-    toast.appendChild(durationBar);
 
-    // Click to remove
-    toast.addEventListener('click', () => {
-      this.hide(id);
+    document.body.appendChild(toast);
+
+    // Trigger enter animation
+    requestAnimationFrame(() => {
+      toast.classList.add('show');
     });
 
-    return toast;
+    // Auto-hide
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    if (duration > 0) {
+      timer = setTimeout(() => this.hide(id), duration);
+    }
+
+    this.active.set(id, { element: toast, timer });
+
+    // Click to dismiss
+    toast.addEventListener('click', () => this.hide(id));
+
+    return id;
   }
 
   public hide(id: string): void {
-    const instance = this.toasts.get(id);
-    if (instance) {
-      instance.hide();
-      this.toasts.delete(id);
-    }
+    const entry = this.active.get(id);
+    if (!entry) return;
+
+    this.active.delete(id);
+    if (entry.timer) clearTimeout(entry.timer);
+
+    const { element } = entry;
+    element.classList.remove('show');
+    element.classList.add('hide');
+
+    setTimeout(() => {
+      element.remove();
+    }, 350);
   }
 
   public hideAll(): void {
-    Array.from(this.toasts.keys()).forEach(id => {
-      this.hide(id);
-    });
+    Array.from(this.active.keys()).forEach((id) => this.hide(id));
   }
 }
 
 const toastManager = new ToastManager();
 
 /**
- * Show a toast notification
+ * Show a toast notification. Accepts a string or an options object.
  */
-export function toast(options: Omit<MosyaToastOptions, 'icon'> & { icon?: 'none' | 'info' | 'success' | 'warning' | 'error' }): string {
-  let opts: MosyaToastOptions;
-  
-  if (typeof options === 'string') {
-    opts = { message: options };
-  } else {
-    opts = { ...options };
-  }
-
-  // Set default icon based on type if not provided
-  if (!opts.icon && opts.type && opts.type !== 'info') {
-    opts.icon = opts.type as any;
-  }
-
+function toast(options: string | MosyaToastOptions): string {
+  const opts: MosyaToastOptions =
+    typeof options === 'string' ? { message: options } : { ...options };
   return toastManager.show(opts);
 }
 
-/**
- * Convenience methods for different toast types
- */
-toast.info = (message: string, options?: Omit<MosyaToastOptions, 'message' | 'type'>): string => {
-  return toast({ message, type: 'info', ...options });
-};
+toast.info = (message: string, options?: Partial<MosyaToastOptions>): string =>
+  toast({ message, type: 'info', ...options });
 
-toast.success = (message: string, options?: Omit<MosyaToastOptions, 'message' | 'type'>): string => {
-  return toast({ message, type: 'success', ...options });
-};
+toast.success = (message: string, options?: Partial<MosyaToastOptions>): string =>
+  toast({ message, type: 'success', ...options });
 
-toast.warning = (message: string, options?: Omit<MosyaToastOptions, 'message' | 'type'>): string => {
-  return toast({ message, type: 'warning', ...options });
-};
+toast.warning = (message: string, options?: Partial<MosyaToastOptions>): string =>
+  toast({ message, type: 'warning', ...options });
 
-toast.error = (message: string, options?: Omit<MosyaToastOptions, 'message' | 'type'>): string => {
-  return toast({ message, type: 'error', ...options });
-};
+toast.error = (message: string, options?: Partial<MosyaToastOptions>): string =>
+  toast({ message, type: 'error', ...options });
 
-toast.question = (message: string, options?: Omit<MosyaToastOptions, 'message' | 'type'>): string => {
-  return toast({ message, type: 'question', ...options });
-};
+toast.question = (message: string, options?: Partial<MosyaToastOptions>): string =>
+  toast({ message, type: 'question', ...options });
 
-// Cleanup on page unload
-window.addEventListener('beforeunload', () => {
-  toastManager.hideAll();
-});
+toast.hide = (id: string): void => toastManager.hide(id);
+toast.hideAll = (): void => toastManager.hideAll();
 
+export { toast };
 export default toast;

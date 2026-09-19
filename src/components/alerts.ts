@@ -1,50 +1,45 @@
 // Alert Components (alert, confirm, prompt)
 import { BasePopup } from './BasePopup';
 import type { MosyaAlertOptions, MosyaConfirmOptions, MosyaPromptOptions } from '../types';
-import styles from '../styles.css?inline';
 
 /**
- * Show an alert dialog
+ * Show an alert dialog. Resolves when closed.
  */
 export function alert(
   options: string | MosyaAlertOptions,
   onClose?: () => void
 ): Promise<void> {
-  let opts: MosyaAlertOptions;
+  const opts: MosyaAlertOptions =
+    typeof options === 'string' ? { text: options } : { ...options };
 
-  if (typeof options === 'string') {
-    opts = { text: options };
-  } else {
-    opts = options;
-  }
-
-  const popup = new AlertPopup(opts);
-
-  // Add click handlers for buttons
+  const popup = new BasePopup(opts);
   const actions = popup.getElement().querySelector('.mosya-actions');
-  if (actions) {
-    const buttons = actions.querySelectorAll('button');
-    
-    buttons.forEach((btn, index) => {
-      if (btn.classList.contains('mosya-cancel-button')) {
-        btn.addEventListener('click', () => {
-          popup.close();
-          onClose?.();
-        });
-      } else if (btn.classList.contains('mosya-confirm-button')) {
-        btn.addEventListener('click', () => {
-          popup.close();
-          onClose?.();
-        });
-      }
+
+  actions?.querySelectorAll('button').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      popup.close();
     });
+  });
+
+  // Click on backdrop closes (handled inside BasePopup via allowOutsideClick)
+  // Escape key closes
+  if (opts.allowEscapeKey !== false) {
+    const esc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        popup.close();
+        document.removeEventListener('keydown', esc);
+      }
+    };
+    document.addEventListener('keydown', esc);
   }
 
-  return popup.show(onClose);
+  return popup.show().then(() => {
+    onClose?.();
+  });
 }
 
 /**
- * Show a confirmation dialog
+ * Show a confirmation dialog. Resolves true on confirm, false otherwise.
  */
 export function confirm(
   options: string | MosyaConfirmOptions,
@@ -52,183 +47,132 @@ export function confirm(
   onCancel?: () => void,
   onDeny?: () => void
 ): Promise<boolean> {
-  return new Promise((resolve) => {
-    let opts: MosyaConfirmOptions;
+  const opts: MosyaConfirmOptions =
+    typeof options === 'string'
+      ? { text: options, showCancelButton: true }
+      : { showCancelButton: true, ...options };
 
-    if (typeof options === 'string') {
-      opts = { text: options };
-    } else {
-      opts = options;
-    }
+  const popup = new BasePopup(opts);
+  const element = popup.getElement();
+  const actions = element.querySelector('.mosya-actions');
 
-    const popup = new ConfirmPopup(opts);
+  let settled = false;
+  const settle = (value: boolean, cb?: () => void) => {
+    if (settled) return;
+    settled = true;
+    popup.close();
+    cb?.();
+    resolvePromise(value);
+  };
 
-    // Add button handlers
-    const actions = popup.getElement().querySelector('.mosya-actions');
-    if (actions) {
-      const denyBtn = actions.querySelector('.mosya-deny-button');
-      const cancelBtn = actions.querySelector('.mosya-cancel-button');
-      const confirmBtn = actions.querySelector('.mosya-confirm-button');
-
-      denyBtn?.addEventListener('click', () => {
-        popup.close();
-        resolve(false);
-        onDeny?.();
-      });
-
-      cancelBtn?.addEventListener('click', () => {
-        popup.close();
-        resolve(false);
-        onCancel?.();
-      });
-
-      confirmBtn?.addEventListener('click', () => {
-        popup.close();
-        resolve(true);
-        onConfirm?.();
-      });
-    }
-
-    popup.show(() => {}); // Don't auto-close
+  let resolvePromise!: (v: boolean) => void;
+  const promise = new Promise<boolean>((resolve) => {
+    resolvePromise = resolve;
   });
+
+  if (actions) {
+    // Deny button (optional, inserted before confirm)
+    if (opts.showDenyButton) {
+      const denyButton = document.createElement('button');
+      denyButton.className = 'mosya-button mosya-deny-button';
+      denyButton.textContent = opts.denyButtonText || 'Deny';
+      denyButton.addEventListener('click', () => settle(false, onDeny));
+      const confirmBtn = actions.querySelector('.mosya-confirm-button');
+      if (confirmBtn) actions.insertBefore(denyButton, confirmBtn);
+      else actions.appendChild(denyButton);
+    }
+
+    const cancelBtn = actions.querySelector('.mosya-cancel-button');
+    const confirmBtn = actions.querySelector('.mosya-confirm-button');
+
+    cancelBtn?.addEventListener('click', () => settle(false, onCancel));
+    confirmBtn?.addEventListener('click', () => settle(true, onConfirm));
+  }
+
+  if (opts.allowEscapeKey !== false) {
+    const esc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        settle(false, onCancel);
+        document.removeEventListener('keydown', esc);
+      }
+    };
+    document.addEventListener('keydown', esc);
+  }
+
+  popup.show();
+  return promise;
 }
 
 /**
- * Show a prompt dialog
+ * Show a prompt dialog. Resolves with the entered string, or null if cancelled.
  */
 export function prompt(
   options: string | MosyaPromptOptions,
   onConfirm?: (value: string) => void,
   onCancel?: () => void
 ): Promise<string | null> {
-  return new Promise((resolve) => {
-    let opts: MosyaPromptOptions;
+  const opts: MosyaPromptOptions =
+    typeof options === 'string'
+      ? { text: options, showCancelButton: true, inputPlaceholder: 'Type here...' }
+      : { showCancelButton: true, ...options };
 
-    if (typeof options === 'string') {
-      opts = { title: 'Input', text: options };
-    } else {
-      opts = options;
-    }
+  const popup = new BasePopup(opts);
+  const element = popup.getElement();
+  const content = element.querySelector('.mosya-content');
+  const actions = element.querySelector('.mosya-actions');
 
-    const popup = new PromptPopup(opts);
+  // Always add the input field
+  const inputWrapper = document.createElement('div');
+  inputWrapper.className = 'mosya-input-wrapper';
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.className = 'mosya-input';
+  input.placeholder = opts.inputPlaceholder || '';
+  input.value = opts.inputValue || '';
+  inputWrapper.appendChild(input);
+  content?.appendChild(inputWrapper);
 
-    const actions = popup.getElement().querySelector('.mosya-actions');
-    const inputWrapper = popup.getElement().querySelector('.mosya-input-wrapper');
-
-    if (inputWrapper && actions) {
-      const input = inputWrapper.querySelector('input') as HTMLInputElement;
-      const cancelButton = actions.querySelector('.mosya-cancel-button');
-      const confirmButton = actions.querySelector('.mosya-confirm-button');
-
-      cancelButton?.addEventListener('click', () => {
-        popup.close();
-        resolve(null);
-        onCancel?.();
-      });
-
-      confirmButton?.addEventListener('click', () => {
-        const value = input?.value || '';
-        popup.close();
-        resolve(value);
-        onConfirm?.(value);
-      });
-
-      // Auto-focus input
-      setTimeout(() => {
-        input?.focus();
-      }, 100);
-    }
-
-    popup.show(() => {});
+  let settled = false;
+  let resolvePromise!: (v: string | null) => void;
+  const promise = new Promise<string | null>((resolve) => {
+    resolvePromise = resolve;
   });
+
+  const finish = (value: string | null, cb?: (v?: string) => void) => {
+    if (settled) return;
+    settled = true;
+    document.removeEventListener('keydown', keyHandler);
+    popup.close();
+    if (value !== null) onConfirm?.(value);
+    else onCancel?.();
+    resolvePromise(value);
+    void cb;
+  };
+
+  const keyHandler = (e: KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      finish(input.value);
+    } else if (e.key === 'Escape' && opts.allowEscapeKey !== false) {
+      finish(null);
+    }
+  };
+  document.addEventListener('keydown', keyHandler);
+
+  if (actions) {
+    const cancelBtn = actions.querySelector('.mosya-cancel-button');
+    const confirmBtn = actions.querySelector('.mosya-confirm-button');
+
+    cancelBtn?.addEventListener('click', () => finish(null));
+    confirmBtn?.addEventListener('click', () => finish(input.value));
+  }
+
+  popup.show();
+
+  // Auto-focus input
+  setTimeout(() => input.focus(), 100);
+
+  return promise;
 }
 
-// AlertPopup implementation
-class AlertPopup extends BasePopup {
-  constructor(options: MosyaAlertOptions = {}) {
-    super(options);
-    
-    const iconWrapper = this.getElement().querySelector('.mosya-icon-wrapper');
-    if (!options.icon || options.icon === 'none' || !iconWrapper) {
-      iconWrapper?.remove();
-    }
-  }
-}
-
-// ConfirmPopup implementation
-class ConfirmPopup extends BasePopup {
-  private options: MosyaConfirmOptions;
-
-  constructor(options: MosyaConfirmOptions = {}) {
-    super(options);
-    this.options = options;
-    
-    const iconWrapper = this.getElement().querySelector('.mosya-icon-wrapper');
-    if (!options.icon || options.icon === 'none' || !iconWrapper) {
-      iconWrapper?.remove();
-    }
-
-    this.setupDenyButton(options);
-  }
-
-  private setupDenyButton(options: MosyaConfirmOptions): void {
-    const actions = this.getElement().querySelector('.mosya-actions');
-    if (actions && options.showDenyButton) {
-      // Insert deny button before confirm button
-      const denyButton = document.createElement('button');
-      denyButton.className = 'mosya-button mosya-deny-button';
-      denyButton.textContent = options.denyButtonText || 'Deny';
-      
-      const confirmButton = actions.querySelector('.mosya-confirm-button');
-      if (confirmButton) {
-        actions.insertBefore(denyButton, confirmButton);
-      } else {
-        actions.appendChild(denyButton);
-      }
-    }
-  }
-}
-
-// PromptPopup implementation
-class PromptPopup extends BasePopup {
-  constructor(options: MosyaPromptOptions = {}) {
-    super(options);
-
-    const iconWrapper = this.getElement().querySelector('.mosya-icon-wrapper');
-    if (!options.icon || options.icon === 'none' || !iconWrapper) {
-      iconWrapper?.remove();
-    }
-
-    this.addInputField(options);
-    this.updateActionsCount(options);
-  }
-
-  private addInputField(options: MosyaPromptOptions): void {
-    const content = this.getElement().querySelector('.mosya-content');
-    
-    if (options.inputPlaceholder) {
-      const inputWrapper = document.createElement('div');
-      inputWrapper.className = 'mosya-input-wrapper';
-
-      const input = document.createElement('input');
-      input.type = 'text';
-      input.placeholder = options.inputPlaceholder;
-      input.value = options.inputValue || '';
-      input.className = 'mosya-input';
-
-      inputWrapper.appendChild(input);
-      content?.appendChild(inputWrapper);
-    }
-  }
-
-  private updateActionsCount(options: MosyaPromptOptions): void {
-    const actions = this.getElement().querySelector('.mosya-actions');
-    actions?.setAttribute('data-buttons', '2');
-  }
-}
-
-export default {
-  alert,
-  confirm,
-  prompt
-};
+export default { alert, confirm, prompt };
