@@ -4,6 +4,14 @@
 
 Library ini memberikan cara yang mudah dan cantik untuk membuat alert, confirmations, prompts, toast notifications, dan loading indicators dengan design yang moden dan responsif.
 
+## 🌐 Live Demo
+
+Test library ni langsung di sini:
+- **Main Demo**: https://mohdsyahid.github.io/mosya-pop-message/
+- Click butang-butan untuk test semua features!
+
+![Dark Theme Demo](https://raw.githubusercontent.com/mohdsyahid/mosya-pop-message/main/demo.png)
+
 ## ✨ Features
 
 - ✅ **Alerts** - Dialog box yang cantik dengan icon dan custom styling
