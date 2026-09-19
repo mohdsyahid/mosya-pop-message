@@ -442,145 +442,173 @@ setTimeout(() => {
   <script src="https://cdn.jsdelivr.net/npm/mosya-pop-message@1.0.0/dist/index.umd.js"></script>
   
   <script>
-    console.log('%c Mosya Pop Message v1.0.0 Loaded! ', 'background: linear-gradient(135deg, #3b82f6, #22c55e); color: white; padding: 10px 20px; border-radius: 5px; font-size: 16px; font-weight: bold;');
-    
-    // Check if library loaded
-    if (!window.MosyaPopMessage) {
-      console.error('Mosya Pop Message library failed to load!');
-    }
-    
-    // Helper function to show alerts
-    function showAlert(type) {
-      const configs = {
-        'info': {
-          title: 'Information',
-          text: 'Ini adalah notifikasi maklumat yang cantik!',
-          icon: 'info'
-        },
-        'success': {
-          title: 'Berjaya!',
-          text: 'Tahniah! Operasi berjaya dibuat tanpa masalah.',
-          icon: 'success'
-        },
-        'warning': {
-          title: 'Amaran',
-          text: 'Sila berhati-hati dan semak maklumat anda.',
-          icon: 'warning'
-        },
-        'error': {
-          title: 'Ralat',
-          text: 'Maaf, terdapat masalah dengan sistem kami.',
-          icon: 'error'
-        }
-      };
+    // Wait for page to fully load before initializing
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('%c Mosya Pop Message Demo Ready! ', 'background: linear-gradient(135deg, #3b82f6, #22c55e); color: white; padding: 10px 20px; border-radius: 5px; font-size: 16px; font-weight: bold;');
       
-      const config = configs[type];
-      if (config && MosyaPopMessage.alert) {
-        MosyaPopMessage.alert(config).then(() => {
-          console.log(type + ' alert dismissed');
+      // Check if library loaded after DOM ready
+      if (window.MosyaPopMessage) {
+        console.log('✓ Library successfully loaded! Ready to use.');
+        enableDemoButtons();
+      } else {
+        console.error('✗ Mosya Pop Message library failed to load!');
+        console.error('Please check your internet connection or try again later.');
+        
+        // Show error message on buttons
+        const buttons = document.querySelectorAll('button[onclick]');
+        buttons.forEach(btn => {
+          btn.disabled = true;
+          btn.title = 'Library not loaded - please refresh page';
+          btn.style.opacity = '0.5';
+          btn.style.cursor = 'not-allowed';
         });
-      } else {
-        console.error('Library not loaded or alert method missing');
       }
-    }
+    });
     
-    // Handle delete confirmation
-    function handleDelete() {
-      if (!MosyaPopMessage.confirm) {
-        alert('Library not loaded yet. Please refresh page.');
-        return;
-      }
-      
-      MosyaPopMessage.confirm({
-        title: 'Adakah anda pasti mahu delete?',
-        text: 'Item ini akan dipadam secara kekal! Tindakan ini tidak dapat diubah semula.',
-        confirmButtonText: 'Yes, Delete',
-        cancelButtonText: 'Cancel',
-        denyButtonText: 'Nope',
-        icon: 'question'
-      })
-      .then((confirmed) => {
-        if (confirmed === true) {
-          MosyaPopMessage.toast.success('✓ Item berjaya dihapuskan!', { duration: 3000 });
-        } else {
-          MosyaPopMessage.toast.info('✗ Tindakan dibatalkan.', { duration: 2500 });
-        }
-      })
-      .catch(function(err) {
-        console.error('Confirm error:', err);
-        alert('Error showing dialog. Please try again.');
-      });
-    }
-    
-    // Show loading indicator
-    function showProgress() {
-      if (!MosyaPopMessage.progress) {
-        alert('Library not loaded yet.');
-        return;
-      }
-      
-      const loadingId = MosyaPopMessage.progress({
-        title: 'Memproses...',
-        text: 'Silakan tunggu sebentar.'
-      });
-      
-      setTimeout(function() {
-        if (typeof MosyaPopMessage.updateProgress === 'function') {
-          MosyaPopMessage.updateProgress(loadingId, {
-            title: 'Menyimpan data...',
-            text: 'Hampir selesai!'
+    // Enable demo buttons when library is ready
+    function enableDemoButtons() {
+      // Helper function to show alerts
+      function showAlert(type) {
+        const configs = {
+          'info': {
+            title: 'Information',
+            text: 'Ini adalah notifikasi maklumat yang cantik!',
+            icon: 'info'
+          },
+          'success': {
+            title: 'Berjaya!',
+            text: 'Tahniah! Operasi berjaya dibuat tanpa masalah.',
+            icon: 'success'
+          },
+          'warning': {
+            title: 'Amaran',
+            text: 'Sila berhati-hati dan semak maklumat anda.',
+            icon: 'warning'
+          },
+          'error': {
+            title: 'Ralat',
+            text: 'Maaf, terdapat masalah dengan sistem kami.',
+            icon: 'error'
+          }
+        };
+        
+        const config = configs[type];
+        if (config && window.MosyaPopMessage.alert) {
+          window.MosyaPopMessage.alert(config).then(() => {
+            console.log(type + ' alert dismissed');
           });
-        }
-      }, 1000);
-      
-      setTimeout(function() {
-        if (typeof MosyaPopMessage.hideProgress === 'function') {
-          MosyaPopMessage.hideProgress(loadingId);
-        }
-        MosyaPopMessage.toast.success('✅ Semua data disimpan berjaya!', { duration: 3000 });
-      }, 3000);
-    }
-    
-    // Handle prompt input
-    function handlePrompt() {
-      if (!MosyaPopMessage.prompt) {
-        alert('Library not loaded yet.');
-        return;
-      }
-      
-      MosyaPopMessage.prompt({
-        title: 'Masukkan Nama Anda',
-        text: 'Sila masukkan nama lengkap anda',
-        inputPlaceholder: 'Contoh: Mohd Syahid',
-        allowOutsideClick: false
-      })
-      .then(function(value) {
-        if (value && value.trim()) {
-          MosyaPopMessage.toast.success('Terima kasih, ' + value + '!', { duration: 3000 });
         } else {
-          MosyaPopMessage.toast.info('Anda menekan Cancel.', { duration: 2500 });
+          console.error('Library not loaded or alert method missing');
         }
-      })
-      .catch(function(err) {
-        console.error('Prompt error:', err);
-      });
-    }
-    
-    // Show toast with proper handling
-    function showToast(type, message, options) {
-      var toastMethods = {
-        'info': MosyaPopMessage.toast.info,
-        'success': MosyaPopMessage.toast.success,
-        'warning': MosyaPopMessage.toast.warning,
-        'error': MosyaPopMessage.toast.error
-      };
-      
-      var method = toastMethods[type];
-      if (method) {
-        method(message, options);
-      } else {
-        console.error('Unknown toast type:', type);
       }
+      
+      // Handle delete confirmation
+      function handleDelete() {
+        if (!window.MosyaPopMessage.confirm) {
+          alert('Library not loaded yet. Please refresh page.');
+          return;
+        }
+        
+        window.MosyaPopMessage.confirm({
+          title: 'Adakah anda pasti mahu delete?',
+          text: 'Item ini akan dipadam secara kekal! Tindakan ini tidak dapat diubah semula.',
+          confirmButtonText: 'Yes, Delete',
+          cancelButtonText: 'Cancel',
+          denyButtonText: 'Nope',
+          icon: 'question'
+        })
+        .then((confirmed) => {
+          if (confirmed === true) {
+            window.MosyaPopMessage.toast.success('✓ Item berjaya dihapuskan!', { duration: 3000 });
+          } else {
+            window.MosyaPopMessage.toast.info('✗ Tindakan dibatalkan.', { duration: 2500 });
+          }
+        })
+        .catch(function(err) {
+          console.error('Confirm error:', err);
+          alert('Error showing dialog. Please try again.');
+        });
+      }
+      
+      // Show loading indicator
+      function showProgress() {
+        if (!window.MosyaPopMessage.progress) {
+          alert('Library not loaded yet.');
+          return;
+        }
+        
+        const loadingId = window.MosyaPopMessage.progress({
+          title: 'Memproses...',
+          text: 'Silakan tunggu sebentar.'
+        });
+        
+        setTimeout(function() {
+          if (typeof window.MosyaPopMessage.updateProgress === 'function') {
+            window.MosyaPopMessage.updateProgress(loadingId, {
+              title: 'Menyimpan data...',
+              text: 'Hampir selesai!'
+            });
+          }
+        }, 1000);
+        
+        setTimeout(function() {
+          if (typeof window.MosyaPopMessage.hideProgress === 'function') {
+            window.MosyaPopMessage.hideProgress(loadingId);
+          }
+          window.MosyaPopMessage.toast.success('✅ Semua data disimpan berjaya!', { duration: 3000 });
+        }, 3000);
+      }
+      
+      // Handle prompt input
+      function handlePrompt() {
+        if (!window.MosyaPopMessage.prompt) {
+          alert('Library not loaded yet.');
+          return;
+        }
+        
+        window.MosyaPopMessage.prompt({
+          title: 'Masukkan Nama Anda',
+          text: 'Sila masukkan nama lengkap anda',
+          inputPlaceholder: 'Contoh: Mohd Syahid',
+          allowOutsideClick: false
+        })
+        .then(function(value) {
+          if (value && value.trim()) {
+            window.MosyaPopMessage.toast.success('Terima kasih, ' + value + '!', { duration: 3000 });
+          } else {
+            window.MosyaPopMessage.toast.info('Anda menekan Cancel.', { duration: 2500 });
+          }
+        })
+        .catch(function(err) {
+          console.error('Prompt error:', err);
+        });
+      }
+      
+      // Show toast with proper handling
+      function showToast(type, message, options) {
+        var toastMethods = {
+          'info': window.MosyaPopMessage.toast.info,
+          'success': window.MosyaPopMessage.toast.success,
+          'warning': window.MosyaPopMessage.toast.warning,
+          'error': window.MosyaPopMessage.toast.error
+        };
+        
+        var method = toastMethods[type];
+        if (method) {
+          method(message, options);
+        } else {
+          console.error('Unknown toast type:', type);
+        }
+      }
+      
+      // Make functions available globally
+      window.showAlert = showAlert;
+      window.handleDelete = handleDelete;
+      window.showProgress = showProgress;
+      window.handlePrompt = handlePrompt;
+      window.showToast = showToast;
+      
+      console.log('✓ Demo buttons enabled!');
     }
   </script>
 </body>
