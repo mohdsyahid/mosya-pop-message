@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mosya Pop Message - Demo</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f9fafb;
+      color: #1f2937;
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 40px 20px;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 60px;
+    }
+
+    h1 {
+      font-size: 42px;
+      font-weight: 700;
+      color: #1f2937;
+      margin-bottom: 16px;
+      letter-spacing: -0.5px;
+    }
+
+    .subtitle {
+      font-size: 18px;
+      color: #6b7280;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .section {
+      background: white;
+      border-radius: 16px;
+      padding: 32px;
+      margin-bottom: 32px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    }
+
+    .section-title {
+      font-size: 24px;
+      font-weight: 600;
+      margin-bottom: 24px;
+      color: #111827;
+      padding-bottom: 12px;
+      border-bottom: 2px solid #e5e7eb;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 16px;
+      margin-top: 24px;
+    }
+
+    .btn {
+      padding: 14px 28px;
+      font-size: 15px;
+      font-weight: 600;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .btn-primary {
+      background-color: #3b82f6;
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background-color: #2563eb;
+    }
+
+    .btn-success {
+      background-color: #22c55e;
+      color: white;
+    }
+
+    .btn-success:hover {
+      background-color: #16a34a;
+    }
+
+    .btn-warning {
+      background-color: #f59e0b;
+      color: white;
+    }
+
+    .btn-warning:hover {
+      background-color: #d97706;
+    }
+
+    .btn-danger {
+      background-color: #ef4444;
+      color: white;
+    }
+
+    .btn-danger:hover {
+      background-color: #dc2626;
+    }
+
+    .btn-gray {
+      background-color: #6b7280;
+      color: white;
+    }
+
+    .btn-gray:hover {
+      background-color: #4b5563;
+    }
+
+    .info-box {
+      background: #f3f4f6;
+      border-left: 4px solid #3b82f6;
+      padding: 16px 20px;
+      border-radius: 8px;
+      margin-bottom: 24px;
+    }
+
+    .info-box h3 {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: #111827;
+    }
+
+    .info-box p {
+      font-size: 14px;
+      color: #4b5563;
+      margin: 0;
+    }
+
+    .examples {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 60px;
+      padding-top: 32px;
+      border-top: 2px solid #e5e7eb;
+      color: #6b7280;
+    }
+
+    code {
+      background: #f3f4f6;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-family: 'Courier New', monospace;
+      color: #111827;
+    }
+
+    .code-block {
+      background: #1f2937;
+      color: #f3f4f6;
+      padding: 20px;
+      border-radius: 12px;
+      overflow-x: auto;
+      margin: 24px 0;
+    }
+
+    .code-block code {
+      background: transparent;
+      padding: 0;
+      color: #e5e7eb;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🎉 Mosya Pop Message</h1>
+      <p class="subtitle">Modern popup notification library for web applications</p>
+    </header>
+
+    <div class="info-box">
+      <h3>Berguna untuk?</h3>
+      <p>Gunakan library ini untuk membuat popup yang lebih menarik dan user-friendly seperti alert, confirm, prompt, toast notifications, dan loading indicators.</p>
+    </div>
+
+    <div class="section">
+      <h2 class="section-title">Basic Alerts</h2>
+      <div class="examples">
+        <button class="btn btn-info" onclick="showInfoAlert()">Info Alert</button>
+        <button class="btn btn-success" onclick="showSuccessAlert()">Success</button>
+        <button class="btn btn-warning" onclick="showWarningAlert()">Warning</button>
+        <button class="btn btn-danger" onclick="showErrorAlert()">Error</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2 class="section-title">Confirmation & Prompt</h2>
+      <div class="examples">
+        <button class="btn btn-gray" onclick="showConfirm()">Confirm Dialog</button>
+        <button class="btn btn-gray" onclick="showPrompt()">Input Prompt</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2 class="section-title">Toast Notifications</h2>
+      <div class="examples">
+        <button class="btn btn-primary" onclick="showToast('info')">Toast Info</button>
+        <button class="btn btn-success" onclick="showToast('success')">Toast Success</button>
+        <button class="btn btn-warning" onclick="showToast('warning')">Toast Warning</button>
+        <button class="btn btn-danger" onclick="showToast('error')">Toast Error</button>
+        <button class="btn btn-gray" onclick="showToast('question')">Toast Question</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2 class="section-title">Progress Indicator</h2>
+      <div class="examples">
+        <button class="btn btn-primary" onclick="showProgress()">Show Loading</button>
+        <button class="btn btn-gray" onclick="hideProgress()">Hide Loading</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2 class="section-title">Installation</h2>
+      <div class="code-block">
+        <pre><code>// Using CDN
+&lt;script src="https://cdn.jsdelivr.net/npm/mosya-pop-message@1.0.0/dist/index.min.js"&gt;&lt;/script&gt;
+
+// Or using npm
+npm install mosya-pop-message</code></pre>
+      </div>
+    </div>
+
+    <footer>
+      <p>Buat oleh <strong>Mosya Team</strong> • MIT Licensed • Version 1.0.0</p>
+    </footer>
+  </div>
+
+  <!-- Load the library -->
+  <script src="../dist/index.umd.js"></script>
+  
+  <script>
+    // Initialize library if loaded globally
+    const { alert, confirm, prompt, toast, progress } = window.MosyaPopMessage || {};
+
+    function showAlert(title, message, icon, typeClass) {
+      if (alert) {
+        alert({ title, text: message, icon: icon }).then(() => {
+          console.log(`✅ ${typeClass} Alert dismissed`);
+        });
+      } else {
+        alert(`${typeClass}: ${message}\nPlease load the library first.`);
+      }
+    }
+
+    function showInfoAlert() {
+      showAlert('Information', 'Ini adalah notifikasi informasi.', 'info', 'INFO');
+    }
+
+    function showSuccessAlert() {
+      showAlert('Berjaya!', 'Tahniah! Operasi anda berjaya.', 'success', 'SUCCESS');
+    }
+
+    function showWarningAlert() {
+      showAlert('Amaran', 'Sila semak maklumat anda sebelum melanjutkan.', 'warning', 'WARNING');
+    }
+
+    function showErrorAlert() {
+      showAlert('Ralat', 'Maaf, terdapat masalah dengan sistem kami.', 'error', 'ERROR');
+    }
+
+    function showConfirm() {
+      if (confirm) {
+        confirm({
+          title: 'Adakah anda pasti?',
+          text: 'Tindakan ini tidak dapat diubah semula.',
+          showDenyButton: true
+        })
+        .then((confirmed) => {
+          if (confirmed) {
+            showToast('success', 'Tindakan disahkan!');
+          } else {
+            showToast('info', 'Tindakan dibatalkan.');
+          }
+        });
+      } else {
+        const result = confirm('Adakah anda pasti?');
+        alert(result ? 'Yes' : 'No');
+      }
+    }
+
+    function showPrompt() {
+      if (prompt) {
+        prompt({
+          title: 'Masukkan Nama',
+          inputPlaceholder: 'Sila masukkan nama anda...'
+        })
+        .then((value) => {
+          if (value) {
+            showToast('success', `Terima kasih, ${value}!`);
+          } else {
+            showToast('info', 'Tiada input diterima.');
+          }
+        });
+      } else {
+        const value = prompt('Masukkan Nama Anda:', '');
+        alert(value || 'Tiada input');
+      }
+    }
+
+    function showToast(type, message) {
+      if (toast) {
+        switch(type) {
+          case 'info':
+            toast.info(message || 'Notifikasi maklumat.', { duration: 3000 });
+            break;
+          case 'success':
+            toast.success(message || 'Semua berjalan lancar!', { duration: 3000 });
+            break;
+          case 'warning':
+            toast.warning(message || 'Sila ambil perhatian!', { duration: 3000 });
+            break;
+          case 'error':
+            toast.error(message || 'Terdapat ralat berlaku.', { duration: 4000 });
+            break;
+          case 'question':
+            toast.question(message || 'Soalan penting.', { duration: 3000 });
+            break;
+        }
+      } else {
+        alert(`${type.toUpperCase()}: ${message}`);
+      }
+    }
+
+    let progressId = null;
+
+    function showProgress() {
+      if (progress) {
+        progressId = progress({
+          title: 'Memproses...',
+          text: 'Sila tunggu sebentar.'
+        });
+
+        // Update after 2 seconds
+        setTimeout(() => {
+          if (updateProgress && progressId) {
+            updateProgress(progressId, {
+              title: 'Menyimpan data...',
+              text: 'Hampir selesai!'
+            });
+          }
+        }, 2000);
+
+        // Hide after 4 seconds
+        setTimeout(() => {
+          if (hideProgress && progressId) {
+            hideProgress(progressId);
+            toast.success('Tamat! Semua data disimpan.');
+          }
+        }, 4000);
+      } else {
+        alert('Progress indicator needs library to be loaded.');
+      }
+    }
+
+    function hideProgress() {
+      if (hideProgress && progressId) {
+        hideProgress(progressId);
+        progressId = null;
+      } else if (window.MosyaPopMessage?.hideAllProgress) {
+        window.MosyaPopMessage.hideAllProgress();
+      } else {
+        // Fallback - remove manually
+        const containers = document.querySelectorAll('.mosya-progress-container');
+        containers.forEach(el => el.remove());
+      }
+    }
+  </script>
+</body>
+</html>
